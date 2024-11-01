@@ -9,12 +9,19 @@
 此程式依據聯邦學習架構進行設計，主要執行流程由以下函式組成：
 
 create_worker()：建立客戶端並分配初始模型。
+
 clustering()：使用 DBSCAN 分群演算法將客戶端進行分群，以便在資料分布不均的情況下改善模型性能。
+
 decide_other_model()：選擇與本地端同一群的模型，以利後續相互學習。
+
 send_model()：將選定的模型發送至其他server端。
+
 local_training()：客戶端的本地模型與server端的模型相互學習以提升模型準確性。
+
 aggregate()：聚合更新後的模型以提高整體準確性。
+
 return_model()：將最終模型返回給客戶端。
+
 
 其中，分群使用 DBSCAN 演算法，並在本地訓練（local training）中結合相互學習（mutual learning）機制，以提升模型的穩定性和泛化能力。
 
