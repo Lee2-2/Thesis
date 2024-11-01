@@ -28,7 +28,7 @@ import datetime
 # matplotlib  == 3.7.1
 # pip install torch==1.13.1 torchvision==0.14.1 pandas==1.4.4 numpy==1.22.4 matplotlib==3.7.1
 
-def fix_seed(seed):
+def fix_seed(seed): #random 分布資料
     # random
     random.seed(seed)
     # Numpy
@@ -240,14 +240,7 @@ def get_dataset(Centralized=True, unlabeled_data=False):
     data_dum = pd.get_dummies(all_trainset[label_cols])
     label = pd.DataFrame(data_dum)
     print(label)
-    # 方法 1: 使用 == 运算符
     contains_nine = (label == 9)
-
-    # 方法 2: 使用 any 方法来检查布尔 DataFrame 中是否存在 True
-    has_nine = contains_nine.any().any()
-
-    # 打印结果
-    print("DataFrame 是否包含值 9:", has_nine)
 
     ########################
 
@@ -449,15 +442,15 @@ for i in range(args.worker_num):
     print("Worker federated", federated_trainset[i])
     labels = [label for _, label in federated_trainset[i]]
     # print("Labels ", labels)
-    # 将 numpy.ndarray 标签转换为 Python 基本数据类型
+    # 將 numpy.ndarray 標籤轉換為 Python 基本設具類型
     labels = [int(label) if isinstance(label, np.ndarray) else label for label in labels]
-    # 统计每个标签的数量
+    # 統計每個標籤的數量
     label_counts = Counter(labels)
 
     sum_1_to_8 = 0
     sum_9_to_10 = 0
 
-    # 打印每个标签的数量
+    # 每個標籤的數量
     for label, count in label_counts.items():
         print(f"Label: {label}, Count: {count}")
         if 1 <= label <= 8:
@@ -639,66 +632,6 @@ class LSTM0(nn.Module): # acc=70
 
         return out
 
-class KMeans(object):
-
-    def __init__(self, n_clusters=2, max_iter=300):
-        """
-        初始化KMeans模型，設置聚類的簇數和最大迭代次數。
-
-        Args:
-        - n_clusters: int, 聚類簇數，默認為5。
-        - max_iter: int, 最大迭代次數，默認為300。
-
-        """
-        self.n_clusters = n_clusters
-        self.max_iter = max_iter
-        self.cluster_centers_ = None
-
-    def fit_predict(self, features):
-        """
-        訓練KMeans模型並返回聚類結果。
-
-        Args:
-        - features: numpy array, 訓練數據，形狀為(n_samples, n_features)。
-
-        Returns:
-        - pred: numpy array, 每個樣本所屬的簇的標籤，形狀為(n_samples,)。
-        """
-        feature_indexes = np.arange(len(features))  # 計算所有特徵的索引
-        np.random.shuffle(feature_indexes)  # 打亂索引，用於隨機初始化質心
-        initial_centroid_indexes = feature_indexes[:self.n_clusters]  # 選擇前k個索引作為初始質心
-        self.cluster_centers_ = features[initial_centroid_indexes]  # 隨機初始化質心
-        pred = np.zeros(features.shape)  # 初始化標籤為0
-        # 迭代更新每個樣本的簇分配和每個簇的質心，直到分配不再改變或達到最大迭代次數
-        for _ in range(self.max_iter):
-            # 計算每個樣本與每個質心之間的歐氏距離，分配到最近的簇
-            new_pred = np.array([
-                np.array([
-                    self.Euclidean_distance(p, centroid)
-                    for centroid in self.cluster_centers_
-                ]).argmin()
-                for p in features
-            ])
-            if np.all(new_pred == pred):  # 如果分配不再改變，停止迭代
-                break
-            pred = new_pred
-            # 將每個簇的質心更新為該簇中所有樣本的平均值
-            self.cluster_centers_ = np.array([features[pred == i].mean(axis=0) for i in range(self.n_clusters)])
-
-        return pred
-
-    def KLD(self, p0, p1):  # 計算兩個概率分布p0和p1之間的Kullback-Leibler散度(KLD)。
-        P = torch.from_numpy(p0.astype(np.float32)).clone()  # 將 p0 和 p1 轉換為 Torch 張量，並將數據類型轉換為 np.float32
-        Q = torch.from_numpy(p1.astype(np.float32)).clone()
-        P = F.softmax(Variable(P), dim=1)  # 對 P 和 Q 進行 softmax 正規化，以便將其轉換為概率分佈
-        Q = F.softmax(Variable(Q), dim=1)
-        # 計算 Kullback-Leibler 散度
-        kld = ((P / (P + Q)) * (P * (P / ((P / (P + Q)) * P + (Q / (P + Q)) * Q)).log())).sum() + (
-                    (Q / (P + Q)) * (Q * (Q / ((P / (P + Q)) * P + (Q / (P + Q)) * Q)).log())).sum()
-        return kld
-
-    def Euclidean_distance(self, p0, p1):  # 計算歐幾里德距離
-        return np.sum((p0 - p1) ** 2)
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -751,7 +684,6 @@ class DBSCAN(object):
         features_np = features.cpu().numpy().reshape(features.shape[0], -1)
         distances, indices = self.kd_tree.query(features_np, k=self.min_samples)  # 查询 k 个最近邻居
 
-        # 选择第一列索引作为最近邻居
         neighbors = torch.tensor(indices, device=args.device, dtype=torch.int64)
 
         return neighbors
@@ -774,10 +706,6 @@ class DBSCAN(object):
 
             if new_neighbors.shape[0] >= self.min_samples:  # Check if enough neighbors are found
                 queue.extend(new_neighbors.cpu().numpy())
-
-
-
-
 
 
 
@@ -994,8 +922,6 @@ class Server():
                 for key in worker_state.keys():
                     new_params[i][key] = worker_state[key]
 
-
-
         # 計算聚合後的模型參數並加載到 self.models 中
 
         for i, model_id in enumerate(train_model_id):
@@ -1057,10 +983,6 @@ class Server():
 
                 for key in worker_state.keys():
                     new_params[i][key] = worker_state[key]
-
-
-
-
 
 
         # 計算聚合後的模型參數並加載到 self.models 中
