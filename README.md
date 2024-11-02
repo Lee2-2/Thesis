@@ -1,4 +1,4 @@
-# Thesis
+# Mutual Learning Approaches with Federated Learning to Detect Low-rate and High-rate DDoS Attacks in IoT Networks
 
 本論文提出了一種個性化聯邦學習（Personalized Federated Learning, PFL）方法，用於偵測高頻與低頻 DDoS 攻擊。此 PFL 框架透過在客戶端進行個性化模型訓練，有效降低因資料分布不均而產生的性能差異，提升模型的準確性與穩定性。此外，優化的相互學習機制允許神經網路自動減少參與模型數量，以降低通訊成本和訓練時間，同時提升準確率。
 
